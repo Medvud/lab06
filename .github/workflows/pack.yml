@@ -59,25 +59,17 @@ jobs:
             build/*.tar.gz
             build/*.msi
             build/*.dmg
+
   create_release:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download build artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ubuntu-latest-packages
-          path: artifacts/linux
-      - uses: actions/download-artifact@v4
-        with:
-          name: windows-latest-packages
-          path: artifacts/windows
-      - uses: actions/download-artifact@v4
-        with:
-          name: macos-latest-packages
-          path: artifacts/macos
+          path: artifacts
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -85,8 +77,6 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: |
-            artifacts/linux/*
-            artifacts/windows/*
-            artifacts/macos/*
+            artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
