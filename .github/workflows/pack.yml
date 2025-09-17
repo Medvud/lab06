@@ -41,6 +41,7 @@ jobs:
 
       - name: Package with CPack
         working-directory: ${{github.workspace}}/build
+        shell: bash
         run: |
           for gen in ${{ join(matrix.cpack_generator, ' ') }}; do
             cpack -G $gen
