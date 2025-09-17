@@ -35,6 +35,7 @@ jobs:
         run: cmake --install build --prefix build/out
 
       - name: Package binaries
+        shell: bash
         run: |
           cd build
           if [ "${{ runner.os }}" == "Linux" ]; then
