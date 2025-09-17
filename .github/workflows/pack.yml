@@ -13,7 +13,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
-            cpack_generator: "DEB;RPM;TGZ;ZIP"
+            cpack_generator: "DEB RPM TGZ ZIP"
           - os: windows-latest
             cpack_generator: "WIX"
           - os: macos-latest
