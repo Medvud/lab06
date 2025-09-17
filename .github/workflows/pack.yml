@@ -62,8 +62,8 @@ jobs:
             build/*.rpm
             build/*.msi
             build/*.dmg
-            build/*.zip
-            build/*.tar.gz
+            source.zip
+            source.tar.gz
 
   release:
     needs: build-and-package
@@ -81,4 +81,5 @@ jobs:
           name: Release ${{ github.ref_name }}
           files: release-assets/**/*
         env:
+
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
