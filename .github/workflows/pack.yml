@@ -62,8 +62,8 @@ jobs:
             build/*.rpm
             build/*.msi
             build/*.dmg
-            build/*.zip
-            build/*.tar.gz
+            source.zip
+            source.tar.gz
 
   release:
     needs: build-and-package
