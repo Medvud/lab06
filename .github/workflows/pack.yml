@@ -47,4 +47,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-packages
-          path: build/*.{deb,rpm,zip,tar.gz,msi,dmg}
+          path: |
+            build/*.deb
+            build/*.rpm
+            build/*.zip
+            build/*.tar.gz
+            build/*.msi
+            build/*.dmg
