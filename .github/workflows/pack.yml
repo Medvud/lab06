@@ -13,11 +13,11 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
-            cpack_generator: "DEB RPM TGZ ZIP"
+            cpack_generator: [DEB, RPM, TGZ, ZIP]
           - os: windows-latest
-            cpack_generator: "WIX"
+            cpack_generator: [WIX, ZIP]
           - os: macos-latest
-            cpack_generator: "DragNDrop"
+            cpack_generator: [DragNDrop, ZIP, TGZ]
 
     steps:
       - name: Checkout repository
@@ -40,8 +40,11 @@ jobs:
         run: cmake --build build --config Release
 
       - name: Package with CPack
-        working-directory: build
-        run: cpack -G ${{ matrix.cpack_generator }}
+        working-directory: ${{github.workspace}}/build
+        run: |
+          for gen in ${{ join(matrix.cpack_generator, ' ') }}; do
+            cpack -G $gen
+          done
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
