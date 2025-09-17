@@ -1,93 +1,83 @@
-name: Build and Package
+name: BuildAndRelease
+
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+
 permissions:
   contents: write
 
 jobs:
-  build:
+  build-and-package:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            cpack_generator: [DEB, RPM, TGZ, ZIP]
-          - os: windows-latest
-            cpack_generator: [WIX, ZIP]
-          - os: macos-latest
-            cpack_generator: [DragNDrop, ZIP, TGZ]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake build-essential rpm
-      - name: Install CMake on macOS
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew update
-          brew install cmake
-      - name: Configure CMake
-        run: cmake -S. -B build -DCMAKE_BUILD_TYPE=Release
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm
 
-      - name: Build
+      - name: Configure build
+        run: >
+          cmake -S . -B build
+          ${{ runner.os == 'Windows' && '-G "Visual Studio 17 2022" -A x64' || '-DCMAKE_BUILD_TYPE=Release' }}
+
+      - name: Compile project
         run: cmake --build build --config Release
 
-      - name: Package with CPack
-        working-directory: ${{github.workspace}}/build
-        shell: bash
+      - name: Install files for packaging
+        run: cmake --install build --prefix build/out
+
+      - name: Package binaries
         run: |
-          for gen in ${{ join(matrix.cpack_generator, ' ') }}; do
-            cpack -G $gen
-          done
+          cd build
+          if [ "${{ runner.os }}" == "Linux" ]; then
+            cpack -G DEB
+            cpack -G RPM
+          elif [ "${{ runner.os }}" == "macOS" ]; then
+            cpack -G DragNDrop
+          else
+            cpack -G WIX
+          fi
+
+      - name: Archive source code
+        if: runner.os == 'Linux'
+        run: |
+          git archive --format=tar.gz -o source.tar.gz HEAD
+          git archive --format=zip -o source.zip HEAD
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-packages
+          name: artifacts-${{ matrix.os }}
           path: |
-            ${{github.workspace}}/build/*.deb
-            ${{github.workspace}}/build/*.rpm
-            ${{github.workspace}}/build/*.zip
-            ${{github.workspace}}/build/*.tar.gz
-            ${{github.workspace}}/build/*.msi
-            ${{github.workspace}}/build/*.dmg
+            build/*.deb
+            build/*.rpm
+            build/*.msi
+            build/*.dmg
+            build/*.zip
+            build/*.tar.gz
 
-  create_release:
-    needs: build
+  release:
+    needs: build-and-package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download build artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ubuntu-latest-packages
-          path: artifacts/linux
-      - uses: actions/download-artifact@v4
-        with:
-          name: windows-latest-packages
-          path: artifacts/windows
-      - uses: actions/download-artifact@v4
-        with:
-          name: macos-latest-packages
-          path: artifacts/macos
+          path: release-assets
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          files: |
-            artifacts/linux/*
-            artifacts/windows/*
-            artifacts/macos/*
+          files: release-assets/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
