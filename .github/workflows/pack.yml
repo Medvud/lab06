@@ -53,12 +53,12 @@ jobs:
         with:
           name: ${{ matrix.os }}-packages
           path: |
-            build/*.deb
-            build/*.rpm
-            build/*.zip
-            build/*.tar.gz
-            build/*.msi
-            build/*.dmg
+            ${{github.workspace}}/build/*.deb
+            ${{github.workspace}}/build/*.rpm
+            ${{github.workspace}}/build/*.zip
+            ${{github.workspace}}/build/*.tar.gz
+            ${{github.workspace}}/build/*.msi
+            ${{github.workspace}}/build/*.dmg
 
   create_release:
     needs: build
@@ -66,10 +66,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download artifacts
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: ubuntu-latest-packages
+          path: artifacts/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-latest-packages
+          path: artifacts/windows
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos-latest-packages
+          path: artifacts/macos
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -77,6 +86,8 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: |
-            artifacts/*
+            artifacts/linux/*
+            artifacts/windows/*
+            artifacts/macos/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
