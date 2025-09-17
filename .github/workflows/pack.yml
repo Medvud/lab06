@@ -28,11 +28,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake build-essential rpm
-     - name: Install CMake on macOS
-       if: matrix.os == 'macos-latest'
-       run: |
-         brew update
-         brew install cmake
+      - name: Install CMake on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install cmake
       - name: Configure CMake
         run: cmake -S. -B build -DCMAKE_BUILD_TYPE=Release
 
